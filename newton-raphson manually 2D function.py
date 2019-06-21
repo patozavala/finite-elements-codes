@@ -31,10 +31,10 @@ def get_r_and_t(r_func, t_func, x_it):
     """
     # the variables are initialized
     x, y = sp.symbols('x y')
-    # the residual and tangent operator are calculated and evaluated in x_it ...
+    # the residual and tangent are calculated and evaluated in x_it 
     r = np.array([[r_func[0, 0].subs([(x, x_it[0, 0]), (y, x_it[1, 0])]).evalf(),
                    r_func[1, 0].subs([(x, x_it[0, 0]), (y, x_it[1, 0])]).evalf()]]).astype(None)
-    #    the tangent operator is calculated and evaluated in x_it ...
+    #    the tangent is calculated and evaluated in x_it
     t = np.array([[t_func[0, 0].subs([(x, x_it[0, 0]), (y, x_it[1, 0])]).evalf(),
                    t_func[0, 1].subs([(x, x_it[0, 0]), (y, x_it[1, 0])]).evalf()],
                   [t_func[1, 0].subs([(x, x_it[0, 0]), (y, x_it[1, 0])]).evalf(),
