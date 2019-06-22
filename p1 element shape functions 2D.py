@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def tri_gauss_quad(k):
     """
     this rotuine gives the quadrature points and weights of quadrature to
@@ -25,7 +24,7 @@ def tri_gauss_quad(k):
     return xi, w
 
 
-def p1_shape_function(x, n):
+def p1_shape_function(triangle, xi):
     """
     this routine evaluates the shape functions and their spatial gradients
     at the quadrature points in the iso-parametric configuration for P1-elements
@@ -36,24 +35,42 @@ def p1_shape_function(x, n):
              J  : Jacobian
     """
 
-    xi = tri_gauss_quad(n)[0][0]
-    xi1 = xi[0]
-    xi2 = xi[1]
+    xi1, xi2 = xi
     xi3 = 1 - xi1 - xi2
     N1hat = xi1
     N2hat = xi2
     N3hat = xi3
     N = np.vstack((N1hat, N2hat, N3hat))
-    Bhat = np.array([[1., 0., -1.], [0., 1., -1.]])
-    J = np.dot(x, Bhat.T)
-    DN = np.dot(np.linalg.inv(J.T), Bhat)
-    return N, DN, J
+    nabla_Nhat = np.array([[1., 0., -1.], [0., 1., -1.]])
+    J = np.dot(triangle, nabla_Nhat.T)
+    nabla_N = np.dot(np.linalg.inv(J.T), nabla_Nhat)
+    return N, nabla_N, J
+
+
+def p2_shape_function(triangle, xi):
+    xi1, xi2 = xi
+    xi3 = 1 - xi1 - xi2
+    n1hat = xi1 * (2. * xi1 - 1.)
+    n2hat = xi2 * (2. * xi2 - 1.)
+    n3hat = xi3 * (2. * xi3 - 1.)
+    n4hat = 4. * xi1 * xi2
+    n5hat = 4. * xi2 * xi3
+    n6hat = 4. * xi1 * xi3
+    N = np.vstack((n1hat, n2hat, n3hat, n4hat, n5hat, n6hat))
+    nabla_Nhat = np.array([[4. * xi1 - 1., 0., -(4. * xi3 - 1.), 4. * xi2, - 4. * xi2, 4. * (xi3 - xi1)],
+                           [0., 4. * xi2 - 1., -(4. * xi3 - 1.), 4. * xi1, 4. * (xi3 - xi2), - 4. * xi1]])
+    J = np.dot(triangle, nabla_Nhat.T)
+    nabla_N = np.dot(np.linalg.inv(J.T), nabla_Nhat)
+    return N, nabla_N, J
 
 
 """
 Execution
 """
-
-x = np.array([[0, 0], [0, 3], [5, 0]]).T
 n = 2
-print(p1_shape_function(x, n))
+xi = tri_gauss_quad(n)[0][0]
+x_p1 = np.array([[0, 0], [0, 3], [5, 0]]).T
+x_p2 = np.array([[0, 0], [0, 1.5], [2.5, 0], [2.5, 1.5], [0, 3], [5, 0]]).T
+
+print(p1_shape_function(triangle=x_p1, xi=xi))
+print(p2_shape_function(triangle=x_p2, xi=xi))
