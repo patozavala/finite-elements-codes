@@ -1,0 +1,98 @@
+import numpy as np
+
+def gauss_quadrature_quadrilateral(n):
+    """
+    this rotuine gives the quadrature points and weights of quadrature to
+    integrate numerically a polynomial of order "k".
+    :param k: polynomial order to approximate
+    :return: xi :  coordinates of quad points
+             w  :  value of quad weight
+    """
+    if n == 1:
+        xi = np.array([0, 0])
+        w = 4
+        return xi, w
+    if n == 2:
+        xi = np.array([[-1. / np.sqrt(3), -1. / np.sqrt(3)], [1. / np.sqrt(3), -1. / np.sqrt(3)],
+                       [1. / np.sqrt(3), 1. / np.sqrt(3)], [-1. / np.sqrt(3), 1. / np.sqrt(3)]])
+        w = np.array([1., 1., 1., 1.])
+        return xi, w
+    elif n == 3:
+        xi = np.array(
+            [[-np.sqrt(5. / 3.), -np.sqrt(5. / 3.)], [0., -np.sqrt(5. / 3.)], [np.sqrt(5. / 3.), -np.sqrt(5. / 3.)],
+             [-np.sqrt(5. / 3.), 0.], [0., 0.], [np.sqrt(5. / 3.), 0.], [-np.sqrt(5. / 3.), np.sqrt(5. / 3.)],
+             [0., np.sqrt(5. / 3.)], [np.sqrt(5. / 3.), np.sqrt(5. / 3.)]])
+        w = np.array(
+            [25. / 81., 40. / 81., 25. / 81., 40. / 81., 64. / 81., 40. / 81., 25. / 81., 40. / 81., 25. / 81.])
+        return xi, w
+
+
+def q1_shape_function(coords, xi):
+    """
+    this routine evaluates the shape functions and their spatial gradients
+    at the quadrature points in the iso-parametric configuration for Q1-elements
+    :param coords: nodes of the of the elements in non-iso parametric configuration
+    :param xi: point of quadrature
+    :return: N : values ​​of the function as assessed at the quad point.
+             nabla_N : gradient of N
+             J  : Jacobian
+    """
+    xi1, xi2 = xi
+    n1hat = 1. / 4. * (1. - xi1) * (1. - xi2)
+    n2hat = 1. / 4. * (1. + xi1) * (1. - xi2)
+    n3hat = 1. / 4. * (1. + xi1) * (1. + xi2)
+    n4hat = 1. / 4. * (1. - xi1) * (1. + xi2)
+
+    N = np.vstack((n1hat, n2hat, n3hat, n4hat))
+    nabla_Nhat = np.array([[-1. / 4. * (1 - n), 1. / 4. * (1 - n), 1. / 4. * (1. + n), 1. / 4. * (1. + n)],
+                           [-1. / 4. * (1 - xi1), -1. / 4. * (1. + xi1), 1. / 4. * (1. + xi1), 1. / 4. * (1 - xi1)]])
+    J = np.dot(coords, nabla_Nhat.T)
+    nabla_N = np.dot(np.linalg.inv(J.T), nabla_Nhat)
+    return N, nabla_N, J
+
+
+def q2_shape_function(coords, xi):
+    """
+    this routine evaluates the shape functions and their spatial gradients
+    at the quadrature points in the iso-parametric configuration for Q2-elements
+    :param coords: nodes of the of the elements in non-iso parametric configuration
+    :param xi: point of quadrature
+    :return: N : values ​​of the function as assessed at the quad point.
+             nabla_N : gradient of N
+             J  : Jacobian
+    """
+    xi1, xi2 = xi
+    n1hat = 1. / 4. * xi1 * xi2 * (1. - xi1) * (1. - xi2)
+    n2hat = -1. / 4. * xi1 * xi2 * (1. + xi1) * (1. - xi2)
+    n3hat = 1. / 4. * xi1 * xi2 * (1. + xi1) * (1. + xi2)
+    n4hat = -1. / 4. * xi1 * xi2 * (1. - xi1) * (1. + xi2)
+    n5hat = -1. / 2. * xi2 * (1. - xi2) * (1. - xi1 ** 2.)
+    n6hat = 1. / 2. * xi1 * (1. + xi1) * (1. - xi2 ** 2.)
+    n7hat = 1. / 2. * xi2 * (1. + xi2) * (1. - xi1 ** 2.)
+    n8hat = -1. / 2. * xi1 * (1. - xi1) * (1. - xi2 ** 2.)
+    n9hat = (1. - xi1 ** 2.) * (1. - xi2 ** 2.)
+    N = np.vstack((n1hat, n2hat, n3hat, n4hat, n5hat, n6hat, n7hat, n8hat, n9hat))
+    nabla_Nhat = np.array([[1. / 4. * xi2 * (1. - xi2) * (1 - 2. * xi1), -1. / 4. * xi2 * (1. - xi2) * (1 + 2. * xi1),
+                            1. / 4. * n * (1. - xi2) * (1 + 2. * xi1), -1. / 4. * xi2 * (1. - xi2) * (1 - 2. * xi1),
+                            xi2 * (1. - n) * xi1, 1. / 2. * (1. - xi2 ** 2.) * (1. + 2. * xi1), -xi2 * (1. + xi2) * xi1,
+                            -1. / 2. * (1. - xi2 ** 2.) * (1. - 2. * xi1), -2. * xi1 * (1. - xi2 ** 2.)],
+                           [1. / 4. * xi1 * (1. - xi1) * (1. - 2. * xi2), -1. / 4. * xi1 * (1. + xi1) * (1. - 2. * xi2),
+                            1. / 4. * xi1 * (1. + xi1) * (1. + 2. * xi2), -1. / 4. * xi1 * (1. - xi1) * (1. + 2. * xi2),
+                            -1. / 2. * (1. - xi1 ** 2.) * (1. - 2. * xi2), -1. * xi1 * (1. + xi1) * xi2,
+                            1. / 2. * (1. - xi1 ** 2.) * (1. + 2. * xi2), xi1 * (1. - xi1) * xi2,
+                            -2. * xi2 * (1. - xi1 ** 2.)]])
+    J = np.dot(coords, nabla_Nhat.T)
+    nabla_N = np.dot(np.linalg.inv(J.T), nabla_Nhat)
+    return N, nabla_N, J
+    
+"""
+Execution
+"""
+
+n = 2
+xi = gauss_quadrature_quadrilateral(n)[0][0]
+x_p1 = np.array([[0, 0], [0, 1], [1, 1], [1, 0]]).T
+x_p2 = np.array([[0, 0], [0, 1], [1, 1], [1, 0], [0, 0.5], [0.5, 0.5][1, 0.5], [0, 0.5], [1, 0.5]]).T
+
+print(q1_shape_function(coords=x_p1, xi=xi))
+print(q2_shape_function(coords=x_p2, xi=xi))
